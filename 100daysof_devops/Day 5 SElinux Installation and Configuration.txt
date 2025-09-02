@@ -1,0 +1,36 @@
+Following a security audit, the xFusionCorp Industries security team has opted to enhance application and server security with SELinux. To initiate testing, the following requirements have been established for App server 3 in the Stratos Datacenter:
+
+
+1.	Install the required SELinux packages.
+2.	Permanently disable SELinux for the time being; it will be re-enabled after necessary configuration changes.
+3.	No need to reboot the server, as a scheduled maintenance reboot is already planned for tonight.
+4.	Disregard the current status of SELinux via the command line; the final status after the reboot should be disabled.
+
+
+
+1. Connect to App Server 3
+ssh banner@stapp03.stratos.xfusioncorp.com
+Password: BigGr33n
+
+2. Install SELinux packages
+Enter command cat /etc/os-release to check the OS
+sudo yum install -y policycoreutils selinux-policy selinux-policy-targeted
+
+
+3. Permanently disable SELinux
+Edit the SELinux configuration file:
+sudo vi /etc/selinux/config
+Change the line:
+SELINUX=enforcing
+to:
+SELINUX=disabled
+Save and exit.
+
+4. Confirm planned state (no reboot needed now)
+Since you don’t want to reboot right now, just confirm the config is updated:
+grep ^SELINUX= /etc/selinux/config
+Expected output:
+SELINUX=disabled
+
+
+
