@@ -1,0 +1,49 @@
+The system admins team of xFusionCorp Industries has set up some scripts on jump host that run on regular intervals and perform operations on all app servers in Stratos Datacenter. To make these scripts work properly we need to make sure the thor user on jump host has password-less SSH access to all app servers through their respective sudo users (i.e tony for app server 1). Based on the requirements, perform the following:
+
+Set up a password-less authentication from user thor on jump host to all app servers through their respective sudo users.
+
+1. Log in as thor on jump host
+
+You’ll already be on jump host (dynamic IP) as thor.
+
+ssh thor@jump_host.stratos.xfusioncorp.com
+
+
+Password: mjolnir123
+
+2. Generate an SSH key for thor
+
+If not already created:
+
+ssh-keygen -t rsa -b 4096
+
+
+Just press Enter for all prompts (default path ~/.ssh/id_rsa, no passphrase).
+
+3. Copy public key to each app server
+
+Use ssh-copy-id to install thor’s public key into the authorized_keys of the sudo users:
+
+ssh-copy-id -i ~/.ssh/id_rsa.pub tony@stapp01.stratos.xfusioncorp.com
+ssh-copy-id -i ~/.ssh/id_rsa.pub steve@stapp02.stratos.xfusioncorp.com
+ssh-copy-id -i ~/.ssh/id_rsa.pub banner@stapp03.stratos.xfusioncorp.com
+
+
+It will ask for the user’s password once:
+
+tony → Ir0nM@n
+
+steve → Am3ric@
+
+banner → BigGr33n
+
+4. Verify passwordless access
+
+Test from jump host:
+
+ssh tony@stapp01.stratos.xfusioncorp.com
+ssh steve@stapp02.stratos.xfusioncorp.com
+ssh banner@stapp03.stratos.xfusioncorp.com
+
+
+Each should log in without asking for a password.
