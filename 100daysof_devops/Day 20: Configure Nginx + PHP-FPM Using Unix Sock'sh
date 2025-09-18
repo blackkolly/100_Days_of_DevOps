@@ -1,0 +1,113 @@
+The Nautilus application development team is planning to launch a new PHP-based application, which they want to deploy on Nautilus infra in Stratos DC. The development team had a meeting with the production support team and they have shared some requirements regarding the infrastructure. Below are the requirements they shared:
+
+
+
+a. Install nginx on app server 1 , configure it to use port 8098 and its document root should be /var/www/html.
+
+
+b. Install php-fpm version 8.2 on app server 1, it must use the unix socket /var/run/php-fpm/default.sock (create the parent directories if don't exist).
+
+
+c. Configure php-fpm and nginx to work together.
+
+
+d. Once configured correctly, you can test the website using curl http://stapp01:8098/index.php command from jump host.
+
+NOTE: We have copied two files, index.php and info.php, under /var/www/html as part of the PHP-based application setup. Please do not modify these files.
+
+
+Perfect 🚀 — this is about deploying nginx + PHP-FPM (v8.2) on stapp01 and wiring them together. Let’s go step by step:
+
+
+Step A: Install nginx on `stapp01`
+
+SSH into app server 1 (via jump host):
+
+ssh -o StrictHostKeyChecking=no thor@jump_host
+ssh tony@stapp01    # password: Ir0nM@n
+
+
+On stapp01:
+
+
+sudo yum install -y nginx
+
+
+Configure nginx to listen on port 8098 and serve from `/var/www/html`.
+
+Edit `/etc/nginx/nginx.conf` or create `/etc/nginx/conf.d/app.conf`:
+
+server {
+    listen 8098;
+
+    server_name stapp01;
+
+    root /var/www/html;
+    index index.php index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/var/run/php-fpm/default.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+}`
+
+
+
+Step B: Install PHP-FPM 8.2
+
+On RHEL/CentOS-based servers, enable Remi repo (if available in lab infra):
+
+sudo yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+sudo yum-config-manager --enable remi-php82
+sudo yum install -y php php-fpm php-mysqlnd
+
+
+Step C: Configure PHP-FPM socket
+
+1. Edit pool config (usually `/etc/php-fpm.d/www.conf`):
+
+[www]
+listen = /var/run/php-fpm/default.sock
+listen.owner = nginx
+listen.group = nginx
+listen.mode = 0660
+
+user = nginx
+group = nginx
+
+; Keep defaults or adjust as needed
+
+2. Make sure the socket directory exists:
+
+
+sudo mkdir -p /var/run/php-fpm
+sudo chown -R nginx:nginx /var/run/php-fpm
+
+Step D: Start Services
+
+
+sudo systemctl enable php-fpm
+sudo systemctl restart php-fpm
+
+sudo systemctl enable nginx
+sudo systemctl restart nginx
+
+
+Step E: Test from jump host
+From jump host:
+
+curl http://stapp01:8098/index.php
+
+
+Expected → You should see the PHP page output (something like “Hello App” or PHP test output, depending on file contents).
+
+You can also check:
+
+curl http://stapp01:8098/info.php
+
