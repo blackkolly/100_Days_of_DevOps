@@ -1,0 +1,42 @@
+There is a Git server utilized by the Nautilus project teams. Recently, a new developer named Jon joined the team and needs to begin working on a project. To begin, he must fork an 
+existing Git repository. Follow the steps below:
+
+Click on the Gitea UI button located on the top bar to access the Gitea page
+Login to Gitea server using username jon and password Jon_pass123.
+Once logged in, locate the Git repository named sarah/story-blog and fork it under the jon user.
+Note: For tasks requiring web UI changes, screenshots are necessary for review purposes. Additionally, consider utilizing
+screen recording software such as loom.com to record and share your task completion process.
+
+Got it 👍 — this task is specifically about using the **Gitea web UI** to fork a repo for the new developer **Jon**. Since this step involves the **browser-based Gitea interface**, here’s exactly what you should do:
+
+---
+
+## 🔹 Steps to Fork `sarah/story-blog` for Jon
+
+1. Access Gitea
+
+   Click the **Gitea UI button** on the top bar of your task environment.
+
+2. Login
+
+   * Username: `jon`
+   * Password: `Jon_pass123`
+
+3. Locate Repository
+
+   * On the top navigation, click Explore → Repository.
+   * Search for sarah/story-blog.
+   * Open the repository page.
+
+4. Fork the Repository
+
+   * On the repository page (top right), click the fork button.
+   * Select jon as the owner
+   * Confirm the fork action.
+
+5. Confirm 
+
+   * After forking, you should be redirected to:
+     jon/story-blog
+     
+ 
