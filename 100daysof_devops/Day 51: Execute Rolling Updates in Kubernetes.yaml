@@ -1,0 +1,50 @@
+An application currently running on the Kubernetes cluster employs the nginx web server. 
+The Nautilus application development team has introduced some recent changes that need deployment. They've crafted an image nginx:1.17 with the latest updates.
+
+Execute a rolling update for this application, integrating the nginx:1.17 image. The deployment is named nginx-deployment.
+Ensure all pods are operational post-update.
+Note: The kubectl utility on jump_host is set up to operate with the Kubernetes cluster
+
+
+
+
+ Step 1: Check the current deployment
+
+kubectl get deployments
+
+Step 2: Perform the rolling update
+
+
+kubectl set image deployment/nginx-deployment nginx-container=nginx:1.17
+
+Explanation:
+
+nginx-deployment` → deployment name
+nginx` → container name within the deployment (use `kubectl describe deployment nginx-deployment` if unsure)
+nginx:1.17` → new image
+
+Step 3: Monitor the rollout
+
+kubectl rollout status deployment/nginx-deployment
+
+Wait until it shows:
+
+deployment "nginx-deployment" successfully rolled out
+
+ Step 4: Verify pods
+
+kubectl get pods -o wide
+
+
+To confirm the image:
+
+kubectl describe deployment nginx-deployment | grep Image:
+
+Expected output:
+
+Image: nginx:1.17
+
+
+Step 5: (Optional) Check rollout history
+
+kubectl rollout history deployment/nginx-deployment
