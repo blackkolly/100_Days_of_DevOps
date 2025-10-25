@@ -1,0 +1,105 @@
+Last week, the Nautilus DevOps team deployed a redis app on Kubernetes cluster, which was working fine so far. 
+This morning one of the team members was making some changes in this existing setup, but he made some mistakes and the app went down. 
+We need to fix this as soon as possible. Please take a look.
+
+The deployment name is redis-deployment. The pods are not in running state right now, so please look into the issue and fix the same.
+Note: The kubectl utility on jump_host has been configured to work with the kubernetes cluster.
+
+
+Step 1: Check Deployment and Pods
+Run:
+kubectl get deployment redis-deployment
+kubectl get pods -l app=redis-deployment
+You’ll likely see pods in CrashLoopBackOff, Error, or ImagePullBackOff state.
+
+Step 2: Inspect Pod Details
+Get the exact pod name:
+kubectl get pods | grep redis
+Then:
+kubectl describe pod <pod-name>
+Look for clues under:
+•	Events (bottom of output)
+•	Image field (wrong image name?)
+•	Crash reason (bad command, missing env var, etc.)
+Perfect — this log tells us exactly what’s wrong ✅
+Let’s break it down:
+
+From the Events section:
+Warning  FailedMount  MountVolume.SetUp failed for volume "config" : configmap "redis-cofig" not found
+So the pod is trying to mount a ConfigMap named redis-cofig,
+but that ConfigMap does not exist.
+Notice the typo — it should likely be redis-config, not redis-cofig.
+
+Step-by-Step Fix
+Check existing ConfigMaps
+kubectl get configmaps
+You’ll probably see something like:
+NAME            DATA   AGE
+redis-config    1      1h
+Edit the Deployment
+Correct the typo in the ConfigMap name reference.
+kubectl edit deployment redis-deployment
+Find this section:
+volumes:
+  - name: config
+    configMap:
+      name: redis-cofig
+Change it to:
+volumes:
+  - name: config
+    configMap:
+      name: redis-config
+Save and exit (:wq if using vi).
+
+Restart Deployment
+After editing:
+kubectl rollout restart deployment redis-deployment
+Then verify pods start up correctly:
+kubectl get pods -w
+
+Verify Everything Works
+Once the pod is Running, check logs:
+kubectl logs -l app=redis
+
+
+Perfect follow-up 👀 — now we’ve fixed the ConfigMap issue,
+but your pods are still failing to start because of a different problem:
+
+Current Issue
+STATUS: ErrImagePull / ImagePullBackOff
+That means Kubernetes cannot pull the Redis image from the registry.
+
+ Step 1: Describe the pod to confirm
+Run:
+kubectl describe pod redis-deployment-5bcd4c7d64-jvlkn | grep -A3 "Failed"
+You’ll likely see something like:
+Failed to pull image "redis:alpin": rpc error: code = Unknown desc = Error response from daemon: manifest for redis:alpin not found
+
+Step 2: Identify the typo in the image name
+In your earlier describe output:
+Image: redis:alpin
+That’s missing an ‘e’ — the correct image name is:
+redis:alpine
+
+Step 3: Fix it in the deployment
+Edit the deployment again:
+kubectl edit deployment redis-deployment
+Find:
+containers:
+  - name: redis-container
+    image: redis:alpin
+Change it to:
+containers:
+  - name: redis-container
+    image: redis:alpine
+Save and exit (:wq).
+
+ Step 4: Apply the fix and verify
+Kubernetes will automatically roll out the new pods.
+Monitor the rollout:
+kubectl rollout status deployment redis-deployment
+Then confirm pods are running:
+kubectl get pods
+You should see:
+NAME                                 READY   STATUS    RESTARTS   AGE
+redis-deployment-6c4b7d4c97-hz2d7    1/1     Running   0          30s
