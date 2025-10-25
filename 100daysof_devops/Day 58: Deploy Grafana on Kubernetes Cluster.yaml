@@ -1,0 +1,56 @@
+The Nautilus DevOps team is planning to set up a Grafana tool to collect and analyze analytics from some applications. 
+They are planning to deploy it on a Kubernetes cluster. Below you can find more details.
+
+1.) Create a deployment named grafana-deployment-xfusion using any Grafana image for the Grafana app. Set other parameters as you choose.
+2.) Create NodePort type service with nodePort 32000 to expose the app.
+You need not to make any configuration changes inside the Grafana app once deployed, just make sure you are able to access the Grafana login page.
+Note: The kubectl on jump_host has been configured to work with kubernetes cluster.
+
+
+
+ Step 1: Create the Grafana Deployment
+
+
+kubectl create deployment grafana-deployment-xfusion --image=grafana/grafana:latest
+
+ Step 2: Create a Service YAML file
+
+Create a file named `grafana-service.yaml`:
+
+```bash
+cat <<EOF > grafana-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+spec:
+  type: NodePort
+  selector:
+    app: grafana-deployment-xfusion
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 32000
+EOF
+
+Step 3: Apply the Service
+
+kubectl apply -f grafana-service.yaml
+Step 4: Verify
+
+kubectl get pods
+kubectl get svc
+
+NAME               TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+grafana-service    NodePort   10.96.x.x      <none>        3000:32000/TCP   10s
+Step 5: Access Grafana
+
+Once the pod is `Running`, open:
+
+http://<NodeIP>:32000
+
+or from the jump host (if it’s on the same node):
+
+curl http://localhost:32000
+You should see the Grafana login page
+
